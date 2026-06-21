@@ -70,7 +70,7 @@ function all(sql, params = []) {
 // MAIN INITIALIZATION FUNCTION
 // Executes all table creation and seeding steps in order.
 // ---------------------------------------------------------------
-async function initializeDatabase() {
+export async function initializeDatabase() {
   console.log("========================================");
   console.log("  8-BIT LAST RACE - Database Seeding");
   console.log("========================================\n");
@@ -440,16 +440,21 @@ async function initializeDatabase() {
 }
 
 // ---------------------------------------------------------------
-// EXECUTION: run the initialization, then close the database.
+// EXECUTION: only run when this file is invoked directly
+// (e.g. "node db-init.js") — not when imported by the server.
 // ---------------------------------------------------------------
-initializeDatabase()
-  .then(() => {
-    db.close();
-    console.log("Database connection closed.");
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error("FATAL: Database initialization failed:", err);
-    db.close();
-    process.exit(1);
-  });
+const isMainModule = process.argv[1] && fileURLToPath(import.meta.url).endsWith(process.argv[1].replace(/\\/g, "/"));
+
+if (isMainModule) {
+  initializeDatabase()
+    .then(() => {
+      db.close();
+      console.log("Database connection closed.");
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error("FATAL: Database initialization failed:", err);
+      db.close();
+      process.exit(1);
+    });
+}

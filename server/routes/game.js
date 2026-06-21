@@ -41,7 +41,8 @@ router.get("/network", async (req, res) => {
     );
     const connections = await all(
       `SELECT lc.line_id, lc.station_id, lc.sequence_order,
-              s.name AS station_name, l.name AS line_name, l.color AS line_color
+              s.name AS station_name, s.is_interchange,
+              l.name AS line_name, l.color AS line_color
        FROM line_connections lc
        JOIN stations s ON lc.station_id = s.id
        JOIN lines l ON lc.line_id = l.id

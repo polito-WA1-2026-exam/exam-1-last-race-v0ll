@@ -298,14 +298,6 @@ export default function Game() {
 
   // RENDER: SETUP PHASE — Full network map + "Start Planning" button
   if (phase === PHASE.SETUP && network) {
-    // Build a lookup map from station_id → station data so we can
-    // check is_interchange from the connections array (the server
-    // doesn't include is_interchange in the connections response).
-    const stationById = {};
-    network.stations.forEach((s) => {
-      stationById[s.id] = s;
-    });
-
     return (
       <div>
         <div className="text-center mb-3">
@@ -332,8 +324,7 @@ export default function Game() {
                   {line.name}
                 </span>
                 {lineStops.map((stop, i) => {
-                  const isInterchange =
-                    stationById[stop.station_id]?.is_interchange === 1;
+                  const isInterchange = stop.is_interchange === 1;
                   return (
                     <span key={stop.station_id}>
                       {i > 0 && <span className="connector-arrow">→</span>}
