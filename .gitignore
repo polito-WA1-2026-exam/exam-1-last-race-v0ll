@@ -1,0 +1,15 @@
+# Ignore temporary SQLite journal files
+*.sqlite-journal
+*.sqlite-wal
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Ignore OS files at the root level
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Ignore local environment variables
+.env
+.env.local

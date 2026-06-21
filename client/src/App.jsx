@@ -1,122 +1,96 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+/*
+ * App.jsx — Root component with SPA routing
+ * Sets up react-router-dom with a BrowserRouter (the standard for
+ * web SPAs).  All navigation between routes happens client-side —
+ * the browser never performs a full page reload
+ * Route structure:
+ *   /         — Home / Instructions (public, but content varies by auth)
+ *   /login    — Login form (redirects to /play if already logged in)
+ *   /play     — Protected: game arena (placeholder for now)
+ *   /ranking  — Protected: leaderboard (placeholder for now)
+ * ProtectedRoute is a wrapper component that checks authentication
+ * If the user is not logged in, it redirects to /login instead of
+ * rendering the protected page
+ */
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext.jsx";
+import Navbar from "./components/Navbar.jsx";
+import Home from "./pages/Home.jsx";
+import Login from "./pages/Login.jsx";
+import Play from "./pages/Play.jsx";
+import Ranking from "./pages/Ranking.jsx";
+import "./App.css";
+// ProtectedRoute — renders children only if the user is logged in.
+// While the initial session check is in progress (loading === true),
+// we show a simple loading indicator to avoid an annoying flash of
+// the login page before the session cookie is validated
+// If loading is done and user is null → redirect to /login
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
 
-function App() {
-  const [count, setCount] = useState(0)
+  if (loading) {
+    // Session check not yet complete — show a minimal loading state
+    return (
+      <div className="placeholder-page">
+        <p className="text-muted">Loading...</p>
+      </div>
+    );
+  }
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+  if (!user) {
+    // Not authenticated — redirect to login
+    // 'replace' prevents the user from going "back" to the protected page
+    return <Navigate to="/login" replace />;
+  }
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  return children;
 }
 
-export default App
+// App component
+// Layout:
+//   <BrowserRouter>   — enables client-side routing (no page reloads)
+//     <Navbar />       — always visible at the top
+//     <main>           — where the current route's component renders
+//       <Routes>
+//         <Route ... />
+//       </Routes>
+//     </main>
+//   </BrowserRouter>
+export default function App() {
+  return (
+    <BrowserRouter>
+      {/* Navbar is rendered OUTSIDE <Routes> so it appears on every page without re-mounting. This is a standard SPA pattern. */}
+      <Navbar />
+
+      <main className="main-content">
+
+        <Routes>
+          <Route path="/" element={<Home />} />
+
+          <Route path="/login" element={<Login />} />
+
+          <Route
+            path="/play"
+            element={
+              <ProtectedRoute>
+                <Play />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/ranking"
+            element={
+              <ProtectedRoute>
+                <Ranking />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* else, redirect home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </BrowserRouter>
+  );
+}
